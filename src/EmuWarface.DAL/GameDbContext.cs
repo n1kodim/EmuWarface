@@ -1,45 +1,50 @@
-﻿using EmuWarface.Common.Configuration;
-using EmuWarface.Database.Model;
+﻿using EmuWarface.DAL.Configurations;
+using EmuWarface.DAL.Models;
 using Microsoft.EntityFrameworkCore;
-using NLog;
 
-namespace EmuWarface.Database
+namespace EmuWarface.DAL
 {
 	public class GameDbContext : DbContext
 	{
-        public GameDbContext() : base() { }
-		public GameDbContext(DbContextOptions<GameDbContext> options) : base(options) { }
+        public DbSet<UserEntity> Users { get; set; }
+		public DbSet<ProfileEntity> Profiles { get; set; }
+		public DbSet<ProfileItemEntity> ProfileItems { get; set; }
+		public DbSet<ProfileAchievementEntity> ProfileAchievements { get; set; }
+		public DbSet<ClanEntity> Clans { get; set; }
+		public DbSet<ClanKickEntity> ClanKicks { get; set; }
+		public DbSet<ClanMemberEntity> ClanMembers { get; set; }
+		public DbSet<FriendEntity> Friends { get; set; }
 
-        private readonly string _connectionString;
-
-        public DbSet<User> Users { get; set; }
-		public DbSet<Profile> Profiles { get; set; }
-		public DbSet<ProfileItem> ProfileItems { get; set; }
-		public DbSet<ProfileAchievement> ProfileAchievements { get; set; }
-
-        public GameDbContext(string connectionString)
-        {
-            _connectionString = connectionString;
-        }
+        public GameDbContext(DbContextOptions<GameDbContext> options) 
+            : base(options) { }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-			if (!optionsBuilder.IsConfigured)
-			{
-                optionsBuilder.UseMySql(_connectionString, ServerVersion.AutoDetect(_connectionString), b =>
-                {
-                    b.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
-                });
-            }
+            base.OnConfiguring(optionsBuilder);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
+
+            // profile configs
+            modelBuilder.ApplyConfiguration(new ProfileConfiguration());
+            modelBuilder.ApplyConfiguration(new ProfileAchievementConfiguration());
+            modelBuilder.ApplyConfiguration(new ProfileItemConfiguration());
+
+            // clan configs
+            modelBuilder.ApplyConfiguration(new ClanConfiguration());
+            modelBuilder.ApplyConfiguration(new ClanMemberConfiguration());
+            modelBuilder.ApplyConfiguration(new ClanKickConfiguration());
+
+            modelBuilder.ApplyConfiguration(new FriendConfiguration());
+
+            //base.OnModelCreating(modelBuilder);
+            /*modelBuilder
                 .UseCollation("utf8mb4_general_ci")
                 .HasCharSet("utf8mb4");
 
-            modelBuilder.Entity<Profile>(entity =>
+            modelBuilder.Entity<ProfileEntity>(entity =>
             {
                 entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -102,7 +107,7 @@ namespace EmuWarface.Database
                     .HasConstraintName("fk_profiles_users_user_id");
             });
 
-            modelBuilder.Entity<ProfileAchievement>(entity =>
+            modelBuilder.Entity<ProfileAchievementEntity>(entity =>
             {
                 entity.HasKey(e => e.AchievementId).HasName("PRIMARY");
 
@@ -128,7 +133,7 @@ namespace EmuWarface.Database
                     .HasConstraintName("fk_profile_achievements_profiles_profile_id");
             });
 
-            modelBuilder.Entity<ProfileItem>(entity =>
+            modelBuilder.Entity<ProfileItemEntity>(entity =>
             {
                 entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -174,7 +179,7 @@ namespace EmuWarface.Database
                     .HasConstraintName("fk_profile_items_profiles_profile_id");
             });
 
-            modelBuilder.Entity<User>(entity =>
+            modelBuilder.Entity<UserEntity>(entity =>
             {
                 entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -203,7 +208,7 @@ namespace EmuWarface.Database
                 entity.HasOne(d => d.Profile).WithMany(p => p.Users)
                     .HasForeignKey(d => d.ProfileId)
                     .HasConstraintName("fk_users_profiles_profile_id");
-            });
+            });*/
         }
     }
 }

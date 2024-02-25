@@ -1,4 +1,4 @@
-﻿namespace EmuWarface.Common.Enums
+﻿namespace EmuWarface.Server.Game.Channel
 {
     public enum ChannelType
     {

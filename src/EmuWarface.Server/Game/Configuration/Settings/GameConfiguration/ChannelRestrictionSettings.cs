@@ -1,8 +1,8 @@
-﻿using EmuWarface.Common.Enums;
-using EmuWarface.Common;
+﻿using EmuWarface.Common;
+using EmuWarface.Server.Game.Channel;
 using System.Xml.Serialization;
 
-namespace EmuWarface.Data.Settings.GameConfiguration
+namespace EmuWarface.Server.Game.Configuration.Settings.GameConfiguration
 {
     public class ChannelRestrictionSettings
     {

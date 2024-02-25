@@ -4,7 +4,7 @@ using EmuWarface.Server.CryOnline.Xmpp;
 using NLog;
 using XmppDotNet.Xmpp.Client;
 
-namespace EmuWarface.Server.CryOnline.Query.Handler
+namespace EmuWarface.Server.Query.Handlers
 {
     #region Xml samples
 

@@ -1,6 +1,4 @@
-﻿using EmuWarface.Common;
-using EmuWarface.Common.Enums;
-using EmuWarface.Server.Data;
+﻿using EmuWarface.Server.Game.Configuration;
 using NLog;
 
 namespace EmuWarface.Server.Game.Channel
@@ -17,15 +15,15 @@ namespace EmuWarface.Server.Game.Channel
             _resourceManager = resourceManager;
             _masterServers = new List<MasterServer>();
 
-            foreach (var server in _resourceManager.GameConfigSettings.MasterServers)
+            foreach (var server in _resourceManager.GameConfig.MasterServers)
             {
                 if (!server.Enabled)
                     continue;
 
                 int minRank = 0;
-                int maxRank = _resourceManager.ExpCurveSettings.GlobalMaxRank;
+                int maxRank = _resourceManager.ExpCurve.GlobalMaxRank;
 
-                var restriction = _resourceManager.GameConfigSettings.ChannelRestrictions
+                var restriction = _resourceManager.GameConfig.ChannelRestrictions
                     .FirstOrDefault(x => x.Channel == server.Channel);
 
                 if (restriction != null)

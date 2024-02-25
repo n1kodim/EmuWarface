@@ -1,5 +1,4 @@
-﻿using EmuWarface.Common.Enums;
-using EmuWarface.Server.CryOnline.Xmpp;
+﻿using EmuWarface.Server.CryOnline.Xmpp;
 using XmppDotNet;
 using XmppDotNet.Xml;
 

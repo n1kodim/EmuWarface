@@ -16,10 +16,9 @@ namespace EmuWarface.Common.Configuration
 
             var root = builder.Build();
 
-            // TODO: Auto detect DB type
-            ConnectionString = root.GetConnectionString("MySqlConnection");
-
             root.Bind(this);
+
+            ConnectionString = root.GetConnectionString("MySqlConnection")!;
         }
     }
 }

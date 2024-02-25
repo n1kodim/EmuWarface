@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace EmuWarface.Data.Settings.GameConfiguration
+namespace EmuWarface.Server.Game.Configuration.Settings.GameConfiguration
 {
     [XmlRoot("game_configuration")]
     public class GameConfigurationSettings

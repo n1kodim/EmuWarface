@@ -1,14 +1,14 @@
-﻿using EmuWarface.Database;
-using EmuWarface.Database.Model;
+﻿using EmuWarface.DAL.Models;
+using EmuWarface.DAL.Repositories;
 using EmuWarface.Server.CryOnline;
 using EmuWarface.Server.CryOnline.Attributes.Query;
 using EmuWarface.Server.CryOnline.Xmpp;
-using EmuWarface.Server.Data;
+using EmuWarface.Server.Game.Configuration;
 using NLog;
 using XmppDotNet.Xml;
 using XmppDotNet.Xmpp.Client;
 
-namespace EmuWarface.Server.Query.Handler
+namespace EmuWarface.Server.Query.Handlers
 {
     #region Xml samples
 
@@ -27,20 +27,20 @@ namespace EmuWarface.Server.Query.Handler
     {
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        private IGameDatabase _gameDatabase;
-        private GameResources _resourceManager;
+        private readonly GameResources _resourceManager;
+        private readonly ProfileRepository _profileRepository;
 
-        public GetAccountProfilesQuery(GameResources resourceManager, IGameDatabase gameDatabase)
+        public GetAccountProfilesQuery(GameResources resourceManager, ProfileRepository profileRepository)
         { 
             _resourceManager = resourceManager;
-            _gameDatabase = gameDatabase;
+            _profileRepository = profileRepository;
         }
 
         public int HandleRequest(XmppSession session, Iq iq, CryOnlineQuery query)
         {
             string version = query.Element.GetAttribute("version");
 
-            if (version != _resourceManager.GameConfigSettings.GameVersion)
+            if (version != _resourceManager.GameConfig.GameVersion)
             {
                 _logger.Warn("\"{0}\" trying to log in with the wrong version of the game ({1})", session.Jid, version);
                 return 1;
@@ -53,7 +53,7 @@ namespace EmuWarface.Server.Query.Handler
                 return 2;
             }
 
-            Profile? profile = _gameDatabase
+            ProfileEntity? profile = _profileRepository
                 .GetProfileByUserIdAsync(user_id)
                 .GetAwaiter()
                 .GetResult();

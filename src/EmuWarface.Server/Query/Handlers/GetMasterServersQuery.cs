@@ -1,12 +1,12 @@
-﻿using EmuWarface.Server.CryOnline.Attributes.Query;
+﻿using EmuWarface.Server.CryOnline;
+using EmuWarface.Server.CryOnline.Attributes.Query;
 using EmuWarface.Server.CryOnline.Xmpp;
 using EmuWarface.Server.Game.Channel;
-using EmuWarface.Server.Query;
 using NLog;
 using XmppDotNet.Xml;
 using XmppDotNet.Xmpp.Client;
 
-namespace EmuWarface.Server.CryOnline.Query.Handler
+namespace EmuWarface.Server.Query.Handler
 {
     #region Xml samples
 

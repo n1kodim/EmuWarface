@@ -1,6 +1,6 @@
 ﻿using System.Xml.Linq;
 
-namespace EmuWarface.Server.Data.Settings
+namespace EmuWarface.Server.Game.Configuration.Settings
 {
     public class ExperienceCurveSettings
     {
@@ -18,10 +18,9 @@ namespace EmuWarface.Server.Data.Settings
             }
 
             ExpCurve.Sort();
-            GlobalMaxRank = ExpCurve.Count;
         }
 
         public List<ulong> ExpCurve { get; set; }
-        public int GlobalMaxRank { get; set; }
+        public int GlobalMaxRank => ExpCurve.Count;
     }
 }

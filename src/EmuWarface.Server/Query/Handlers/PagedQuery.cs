@@ -5,7 +5,7 @@ using NLog;
 using XmppDotNet.Xmpp.Client;
 using XmppDotNet.Xmpp.MessageArchiving;
 
-namespace EmuWarface.Server.Query.Handler
+namespace EmuWarface.Server.Query.Handlers
 {
     #region Xml samples
 

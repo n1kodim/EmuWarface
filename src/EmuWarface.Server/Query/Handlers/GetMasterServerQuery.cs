@@ -1,5 +1,4 @@
-﻿using EmuWarface.Common.Enums;
-using EmuWarface.Server.CryOnline;
+﻿using EmuWarface.Server.CryOnline;
 using EmuWarface.Server.CryOnline.Attributes.Query;
 using EmuWarface.Server.CryOnline.Xmpp;
 using EmuWarface.Server.Game.Channel;
@@ -7,7 +6,7 @@ using NLog;
 using XmppDotNet.Xml;
 using XmppDotNet.Xmpp.Client;
 
-namespace EmuWarface.Server.Query.Handler
+namespace EmuWarface.Server.Query.Handlers
 {
     #region Xml samples
 

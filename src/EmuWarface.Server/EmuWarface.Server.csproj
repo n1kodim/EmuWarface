@@ -1,35 +1,43 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-    <Version>1.0.0</Version>
+    <TargetFramework>net8.0</TargetFramework>
+    <Version>0.1.0</Version>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RepositoryUrl>https://github.com/n1kodim/EmuWarface</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="Query\AccountQuery.cs" />
-    <Compile Remove="Query\Handler\SampleQuery.cs" />
+    <Compile Remove="CryOnline\Network\NetworkSession.cs" />
+    <Compile Remove="CryOnline\Network\SocketListener.cs" />
+    <Compile Remove="CryOnline\Network\SocketOptions.cs" />
+    <Compile Remove="CryOnline\XmppServer.cs" />
+    <Compile Remove="CryOnline\XmppSession.cs" />
+    <Compile Remove="ProgramOld.cs" />
+    <Compile Remove="Query\Handlers\SampleQuery.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Query\Handler\GetMasterServersQuery.cs" />
-    <None Include="Query\Handler\SampleQuery.cs" />
-  </ItemGroup>
+    <None Include="CryOnline\Network\NetworkSession.cs" />
+    <None Include="CryOnline\Network\SocketListener.cs" />
+    <None Include="CryOnline\Network\SocketOptions.cs" />
+    <None Include="CryOnline\XmppServer.cs" />
+    <None Include="CryOnline\XmppSession.cs" />
+    <None Include="ProgramOld.cs" />
+  </ItemGroup>  
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="7.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.2" />
-    <PackageReference Include="EFCore.NamingConventions" Version="7.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="MiniXML" Version="1.0.7" />
     <PackageReference Include="NLog" Version="5.2.8" />
     <PackageReference Include="NLog.Extensions.Logging" Version="5.3.8" />
-    <PackageReference Include="XmppDotNet.Core" Version="3.2.2" />
-  </ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+  </ItemGroup>  
   <ItemGroup>
-    <ProjectReference Include="..\EmuWarface.Common\EmuWarface.Common.csproj" />
-    <ProjectReference Include="..\EmuWarface.Database\EmuWarface.Database.csproj" />
-    <ProjectReference Include="..\EmuWarface.Data\EmuWarface.Data.csproj" />
+    <ProjectReference Include="..\EmuWarface.DAL\EmuWarface.DAL.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.dev.json">
@@ -41,22 +49,12 @@
     <None Update="emu.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="config.dev.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="config.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="emu.key">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="nlog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="CryOnline\Xmpp\Client\" />
-    <Folder Include="Game\CacheData\" />
+    <None Update="Resources\masterserver_config.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ProjectExtensions>
     <VisualStudio>

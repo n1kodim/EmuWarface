@@ -1,3 +1,4 @@
+using EntityFramework.Exceptions.MySQL.Pomelo;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -11,7 +12,20 @@ namespace EmuWarface.DAL
 
             optionsBuilder
                 .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
-                .UseSnakeCaseNamingConvention();
+                .UseSnakeCaseNamingConvention()
+                .UseExceptionProcessor();
+
+            return new GameDbContext(optionsBuilder.Options);
+        }
+
+        public GameDbContext CreateInMemoryDbContext()
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<GameDbContext>();
+
+            optionsBuilder
+                .UseInMemoryDatabase("emuwarface")
+                .UseSnakeCaseNamingConvention()
+                .UseExceptionProcessor();
 
             return new GameDbContext(optionsBuilder.Options);
         }

@@ -1,11 +1,14 @@
 ﻿using EmuWarface.DAL.Configurations;
 using EmuWarface.DAL.Models;
 using Microsoft.EntityFrameworkCore;
+using NLog;
 
 namespace EmuWarface.DAL
 {
 	public class GameDbContext : DbContext
 	{
+        private Logger _logger = LogManager.GetCurrentClassLogger();
+
         public DbSet<UserEntity> Users { get; set; }
 		public DbSet<ProfileEntity> Profiles { get; set; }
 		public DbSet<ProfileItemEntity> ProfileItems { get; set; }
@@ -21,6 +24,20 @@ namespace EmuWarface.DAL
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
+        }
+
+        public GameDbContext Migrate()
+        {
+            List<string> migrations = Database.GetPendingMigrations().ToList();
+            if (migrations.Count > 0)
+            {
+                _logger.Info($"Applying {migrations.Count} migration(s) to game database...");
+                foreach (string migration in migrations)
+                    _logger.Info(migration);
+                Database.Migrate();
+            }
+            _logger.Info("Connected to game database successfully. ({0})", ServerVersion.AutoDetect(Database.GetConnectionString()));
+            return this;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

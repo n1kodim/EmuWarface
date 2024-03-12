@@ -1,29 +1,38 @@
-﻿using EmuWarface.Server.Game.Configuration;
+﻿using EmuWarface.Server.Common.Attributes;
+using EmuWarface.Server.Game.Data.Configuration;
+using EmuWarface.Server.Game.Data.Configuration.Masterserver;
 using NLog;
 
 namespace EmuWarface.Server.Game.Channel
 {
+    [Service]
     public class ChannelManager
     {
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        private GameResources _resourceManager;
+        private readonly MasterServerConfig _masterserverConfig;
+        private readonly ExperienceCurveConfig _experienceCurveConfig;
         private readonly List<MasterServer> _masterServers;
 
-        public ChannelManager(GameResources resourceManager)
+        public ChannelManager(MasterServerConfig masterserverConfig, ExperienceCurveConfig experienceCurveConfig)
         {
-            _resourceManager = resourceManager;
+            _masterserverConfig = masterserverConfig;
+            _experienceCurveConfig = experienceCurveConfig;
             _masterServers = new List<MasterServer>();
+        }
 
-            foreach (var server in _resourceManager.GameConfig.MasterServers)
+        public void InitChannels()
+        {
+            var channelIds = new Dictionary<ChannelType, int>();
+            foreach (var server in _masterserverConfig.ChannelSettings)
             {
                 if (!server.Enabled)
                     continue;
 
                 int minRank = 0;
-                int maxRank = _resourceManager.ExpCurve.GlobalMaxRank;
+                int maxRank = _experienceCurveConfig.GlobalMaxRank;
 
-                var restriction = _resourceManager.GameConfig.ChannelRestrictions
+                var restriction = _masterserverConfig.ChannelRestrictions
                     .FirstOrDefault(x => x.Channel == server.Channel);
 
                 if (restriction != null)
@@ -32,13 +41,19 @@ namespace EmuWarface.Server.Game.Channel
                     maxRank = restriction.MaxRank != 0 ? restriction.MaxRank : maxRank;
                 }
 
-                var masterserver = new MasterServer(server.Id, server.Channel, server.MaxUsers, minRank, maxRank);
+                // increment channel id
+                if (!channelIds.ContainsKey(server.Channel))
+                    channelIds[server.Channel] = 0;
+
+                channelIds[server.Channel]++;
+                var serverId = (int)server.Channel * 100 + channelIds[server.Channel];
+
+                var masterserver = new MasterServer(serverId, server.Channel, server.MaxUsers, minRank, maxRank);
                 _masterServers.Add(masterserver);
             }
 
-            _logger.Info("Initialised {0} channel(s): ({1})",
-                _masterServers.Count,
-                string.Join(",", _masterServers.Select(x => x.Resource).ToArray()));
+            _logger.Info("Initialised {0} channel(s)", _masterServers.Count);
+            _logger.Debug(string.Join(", ", _masterServers.Select(x => x.Resource).ToArray()));
         }
 
         public IEnumerable<MasterServer> GetChannels()
@@ -48,7 +63,7 @@ namespace EmuWarface.Server.Game.Channel
 
         public MasterServer? GetChannel(ChannelType channel)
         {
-            return _masterServers.FirstOrDefault(x => x.Channel == channel && x.Online < x.MaxUsers);
+            return _masterServers.FirstOrDefault(x => x.Type == channel && x.Online < x.MaxUsers);
         }
     }
 }

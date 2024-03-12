@@ -1,10 +1,9 @@
-﻿using EmuWarface.Server.CryOnline;
-using EmuWarface.Server.CryOnline.Attributes.Query;
-using EmuWarface.Server.CryOnline.Xmpp;
+﻿using EmuWarface.Server.Common;
+using EmuWarface.Server.Common.Attributes;
 using EmuWarface.Server.Game.Channel;
+using EmuWarface.Server.Game.Player;
+using MiniXML;
 using NLog;
-using XmppDotNet.Xml;
-using XmppDotNet.Xmpp.Client;
 
 namespace EmuWarface.Server.Query.Handler
 {
@@ -45,7 +44,7 @@ namespace EmuWarface.Server.Query.Handler
     #endregion
 
     [Query("account", "get_master_servers")]
-    public class GetMasterServersQuery : IQueryHandler
+    public class GetMasterServersQuery : QueryHandler
     {
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
         private ChannelManager _channelManager;
@@ -55,36 +54,30 @@ namespace EmuWarface.Server.Query.Handler
             _channelManager = channelManager;
         }
 
-        public int HandleRequest(XmppSession session, Iq iq, CryOnlineQuery query)
+        public override async Task<Result<Element?, int>> HandleRequestAsync(IOnlinePlayer player, Element query)
         {
-            var res = new XmppXElement(query.Element.Name);
+            var res = new Element(query.Name);
 
-            if (query.Element.Name.LocalName == "account")
+            if (query.LocalName == "account")
             {
                 // TODO: it can be validated
-                string login = query.Element.GetAttribute("login");
-                string password = query.Element.GetAttribute("password");
+                string login = query.GetAttribute("login");
+                string password = query.GetAttribute("password");
 
-                res.SetAttribute("user", iq.From.Local)
-                    .SetAttribute("survival_lb_enabled", "0")
-                    .SetAttribute("active_token", " ")
-                    .SetAttribute("nickname", "");
+                res.SetAttribute("user", player.Jid.Local);
+                res.SetAttribute("survival_lb_enabled", "0");
+                res.SetAttribute("active_token", " ");
+                res.SetAttribute("nickname", "");
             }
 
-            var ms = new XmppXElement(Namespaces.CryOnline, "masterservers");
+            var ms = new Element("masterservers");
             foreach(var server in _channelManager.GetChannels())
             {
-                ms.Add(server.Serialize());
+                ms.C(server.Serialize());
             }
-            res.Add(ms);
+            res.C(ms);
 
-            session.SendQueryResponse(iq, res);
-            return 0;
-        }
-
-        public int HandleResponse(XmppSession session, Iq iq, CryOnlineQuery query)
-        {
-            throw new NotImplementedException();
+            return res;
         }
     }
 }

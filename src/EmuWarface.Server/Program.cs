@@ -1,91 +1,106 @@
-using Autofac;
-using EmuWarface.Common.Configuration;
-using EmuWarface.Database;
-using EmuWarface.Server.CryOnline;
-using EmuWarface.Server.CryOnline.Attributes.Query;
-using EmuWarface.Server.CryOnline.Query;
-using EmuWarface.Server.Data;
-using EmuWarface.Server.Game;
-using EmuWarface.Server.Game.Channel;
-using EmuWarface.Server.Network;
-using EmuWarface.Server.Query;
-using EmuWarface.Server.Query.Handler;
+﻿using System.Reflection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Hosting;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using EmuWarface.DAL.Repositories;
+using EmuWarface.DAL;
+using EmuWarface.Server.Common.Attributes;
+using EmuWarface.Server.Query;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using EmuWarface.Server.Common.Configuration;
 using NLog;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using static System.Formats.Asn1.AsnWriter;
+using EmuWarface.Server.Game.Data.Configuration;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using System;
 
-namespace EmuWarface
+public partial class Program
 {
-    static class Program
-	{
-        static readonly Logger _logger = LogManager.GetLogger("Server");
+    static readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        static async Task Main(string[] args)
-		{
-            AppDomain.CurrentDomain.UnhandledException += UnhandledException;
-            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+    public static async Task Main(string[] args)
+    {
+        _logger.Info($"{nameof(EmuWarface)} v{Assembly.GetEntryAssembly().GetName().Version}");
+        _logger.Info($"GitHub repository: https://github.com/n1kodim/EmuWarface");
 
-            _logger.Info($"{nameof(EmuWarface)} v{Assembly.GetEntryAssembly().GetName().Version}");
-            _logger.Info($"GitHub repository: https://github.com/n1kodim/EmuWarface");
+        var host = Host.CreateDefaultBuilder(args);
+        ConfigureHost(host);
 
-            BuildServices();
-
-            //_logger.Info(@"Done. For help, type ""/help""");
-
-            await Task.Delay(Timeout.Infinite);
-        }
-
-        private static void BuildServices()
+        try
         {
-            var builder = new ContainerBuilder();
+            await host.RunConsoleAsync();
+        }
+        catch (Exception e)
+        {
+            _logger.Fatal(e);
+        }
+    }
 
-            builder.RegisterType<AppSettings>();
+    public static void ConfigureHost(IHostBuilder hostBuilder) =>
+        hostBuilder.ConfigureAppConfiguration(config =>
+        {
+            config.AddJsonFile("appsettings.json", false);
+            config.AddJsonFile("appsettings.dev.json", true, true);
+        })
+        .ConfigureLogging((ctx, configLogging) =>
+        {
+            configLogging.ClearProviders();
+            configLogging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+            //configLogging.AddNLog();
+        })
+        .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+        .ConfigureServices(services =>
+        {
+            services.Configure<HostOptions>(hostOptions =>
+            {
+                hostOptions.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+            });
+            //TODO: XmppSharp
+            //services.AddHostedService<XmppServer>();
+        })
+        .ConfigureContainer<ContainerBuilder>((ctx, containerBuilder) =>
+        {
+            containerBuilder.Register(c => ctx.Configuration);
 
-            builder.Register(c =>
-                {
-                    var config = c.Resolve<AppSettings>();
-                    var db = new GameDatabase(config.ConnectionString);
-                    db.Migrate();
-                    return db;
-                })
-                .As<IGameDatabase>()
+            var dbContext = new GameDbContextFactory()
+                .CreateDbContext(ctx.Configuration.GetConnectionString("MySqlConnection"))
+                .Migrate();
+
+            containerBuilder.Register(c => dbContext)
                 .InstancePerLifetimeScope();
 
-            builder.RegisterType<GameResources>()
-                .SingleInstance();
-            builder.RegisterType<ChannelManager>()
-                .SingleInstance();
+            // DAL repositories
+            containerBuilder.RegisterType<ProfileRepository>();
+
+            containerBuilder.Register(c => ctx.Configuration.GetSection(GameOptions.Game).Get<GameOptions>()!);
+            containerBuilder.Register(c => ctx.Configuration.GetSection(XmppOptions.Xmpp).Get<XmppOptions>()!);
 
             // scan an assembly for query handlers
             var assembly = Assembly.GetExecutingAssembly();
-            var types = assembly.GetTypes().Where(t => t.GetCustomAttribute<QueryAttribute>() != null);
-            builder.RegisterAssemblyTypes(assembly)
-                .Where(t => t.GetInterfaces().Any(x => x == typeof(IQueryHandler)))
-                .AsImplementedInterfaces();
 
-            builder.RegisterType<QueryFactory>()
-                .SingleInstance();
+            // TODO: GameResources (GameConfigs) external with try catch
 
-            builder.RegisterType<XmppServer>()
+            containerBuilder.RegisterAssemblyTypes(assembly)
+                .Where(t => t.GetInterfaces()
+                .Any(i => i.IsAssignableFrom(typeof(IGameConfig))))
                 .SingleInstance()
+                .As<IGameConfig>()
+                .AsSelf()
                 .AutoActivate()
-                .OnActivated(x => x.Instance.Start());
+                .OnActivated(c => ((IGameConfig)c.Instance).LoadAsync());
 
-            var container = builder.Build();
+            containerBuilder.RegisterAssemblyTypes(assembly)
+                .Where(t => t.GetCustomAttribute(typeof(ServiceAttribute)) != null)
+                .SingleInstance()
+                .AsSelf()
+                .AutoActivate();
 
-            //container.Resolve<IGameDatabase>().Migrate();
-        }
-
-        private static void UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            _logger.Fatal((Exception)e.ExceptionObject);
-            Console.WriteLine("Press ENTER to continue ...");
-            Console.ReadLine();
-            Environment.Exit(1);
-        }
-    }
+            containerBuilder.RegisterAssemblyTypes(assembly)
+                .Where(t => t.IsSubclassOf(typeof(QueryHandler)))
+                .SingleInstance()
+                .AsSelf()
+                .As<QueryHandler>();
+        });
 }

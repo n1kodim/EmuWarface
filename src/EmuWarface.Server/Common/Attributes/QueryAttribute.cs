@@ -1,4 +1,4 @@
-namespace EmuWarface.Server.CryOnline.Attributes.Query
+namespace EmuWarface.Server.Common.Attributes
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class QueryAttribute : Attribute

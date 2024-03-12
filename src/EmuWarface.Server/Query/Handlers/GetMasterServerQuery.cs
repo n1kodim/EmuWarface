@@ -1,10 +1,10 @@
-﻿using EmuWarface.Server.CryOnline;
-using EmuWarface.Server.CryOnline.Attributes.Query;
-using EmuWarface.Server.CryOnline.Xmpp;
+﻿using EmuWarface.Common;
+using EmuWarface.Server.Common;
+using EmuWarface.Server.Common.Attributes;
 using EmuWarface.Server.Game.Channel;
+using EmuWarface.Server.Game.Player;
+using MiniXML;
 using NLog;
-using XmppDotNet.Xml;
-using XmppDotNet.Xmpp.Client;
 
 namespace EmuWarface.Server.Query.Handlers
 {
@@ -23,7 +23,7 @@ namespace EmuWarface.Server.Query.Handlers
     #endregion
 
     [Query("get_master_server")]
-    public class GetMasterServerQuery : IQueryHandler
+    public class GetMasterServerQuery : QueryHandler
     {
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
@@ -34,14 +34,15 @@ namespace EmuWarface.Server.Query.Handlers
             _channelManager = channelManager;
         }
 
-        public int HandleRequest(XmppSession session, Iq iq, CryOnlineQuery query)
+        public override async Task<Result<Element?, int>> HandleRequestAsync(IOnlinePlayer player, Element query)
         {
-            ChannelType channel = query.Element.GetAttributeEnum<ChannelType>("channel");
-            if ((int)channel == -1)
+            var channel = query.GetAttribute("channel").ToEnum<ChannelType>();
+            /*if ((int)channel == -1)
             {
                 _logger.Error("Unknown channnel type: \"{0}\"", channel);
                 return 2;
-            }
+            }*/
+            // TODO: check channel type
 
             MasterServer? ms = _channelManager.GetChannel(channel);
 
@@ -50,18 +51,11 @@ namespace EmuWarface.Server.Query.Handlers
             //int rank = query.Element.GetAttributeInt("rank");
             //IEnumerable<string> usedResources = query.Element.GetAttribute("used_resources").Split(';');
 
-            var el = new XmppXElement(query.Element.Name);
-            el.SetAttribute("resource", ms.Resource);
-            el.SetAttribute("load_index", "255");
+            Element res = new Element(query.Name);
+            res.SetAttribute("resource", ms.Resource);
+            res.SetAttribute("load_index", "255");
 
-            session.SendQueryResponse(iq, el);
-
-            return 0;
-        }
-
-        public int HandleResponse(XmppSession session, Iq iq, CryOnlineQuery query)
-        {
-            throw new NotImplementedException();
+            return res;
         }
     }
 }

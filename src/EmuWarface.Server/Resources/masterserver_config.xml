@@ -1,0 +1,62 @@
+﻿<masterserver_config>
+	
+	<channels>
+		<channel enabled="1" channel="pve" max_users="100"/>
+		<channel enabled="1" channel="pvp_newbie" max_users="100"/>
+		<channel enabled="1" channel="pvp_skilled" max_users="100"/>
+		<channel enabled="1" channel="pvp_pro" max_users="100"/>
+		<channel enabled="1" channel="pvp_pro" max_users="100"/>
+		<channel enabled="1" channel="pvp_pro" max_users="100"/>
+		<channel enabled="1" channel="pvp_pro" max_users="100"/>
+		<channel enabled="1" channel="pvp_pro" max_users="100"/>
+		<channel enabled="1" channel="pvp_pro" max_users="100"/>
+		<channel enabled="1" channel="pvp_pro" max_users="100"/>
+		<channel enabled="1" channel="pvp_pro" max_users="100"/>
+		<channel enabled="1" channel="pvp_pro" max_users="100"/>
+		<channel enabled="1" channel="pvp_pro" max_users="100"/>
+		<channel enabled="1" channel="pvp_pro" max_users="100"/>
+		<channel enabled="1" channel="pvp_pro" max_users="100"/>
+	</channels>
+
+	<channel_restrictions>
+		<restriction channel="pvp_newbie" min_rank="1" max_rank="10"/>
+		<restriction channel="pvp_skilled" min_rank="11" max_rank="25"/>
+		<restriction channel="pvp_pro" min_rank="26"/>
+	</channel_restrictions>
+	
+	<friends>
+		<limit>100</limit>
+		<add_friend_expiration>604800</add_friend_expiration>
+		<invitation_expiration>120</invitation_expiration>
+	</friends>
+
+	<clans>
+		<max_clan_size>100</max_clan_size>
+		<clan_name_min_size>4</clan_name_min_size>
+		<clan_name_max_size>16</clan_name_max_size>
+		<enable_clan_chat>1</enable_clan_chat>
+		<kicked_user_invite_timeout>86400</kicked_user_invite_timeout>
+		<invite_expiration_timeout>300</invite_expiration_timeout>
+	</clans>
+
+	<notifications>
+		<notifications_expiration_timeout>7200000</notifications_expiration_timeout>
+		<notification_limit>200</notification_limit>
+	</notifications>
+
+	<matchmaking>
+		<queue_interval>2000</queue_interval>
+		<tries_number>1</tries_number>
+		<time_to_maps_reset_notification>120</time_to_maps_reset_notification>
+		<autostart_enabled>1</autostart_enabled>
+		<pve_autostart_enabled>1</pve_autostart_enabled>
+	</matchmaking>
+
+	<shop>
+		<max_batch_size>5</max_batch_size>
+		<randombox win_model="persistent" max_items_supported="11"/>
+		<randombox_choice_limitation enabled="1" max_amount="1"/>
+		<regular_item max_amount="1" stacking_enabled="1" />
+	</shop>
+	
+</masterserver_config>

@@ -1,20 +1,20 @@
 ﻿using Autofac;
-using EmuWarface.Server.CryOnline.Attributes.Query;
-using EmuWarface.Server.CryOnline.Xmpp;
+using EmuWarface.Server.Common.Attributes;
 using NLog;
 using System.Reflection;
 
 namespace EmuWarface.Server.Query
 {
+    [Service]
     public class QueryFactory
     {
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        private readonly Dictionary<string, IQueryHandler> _handlers;
+        private readonly Dictionary<string, QueryHandler> _handlers;
 
-        public QueryFactory(IEnumerable<IQueryHandler> handlers)
+        public QueryFactory(IEnumerable<QueryHandler> handlers)
         {
-            _handlers = new Dictionary<string, IQueryHandler>();
+            _handlers = new Dictionary<string, QueryHandler>();
 
             foreach (var handler in handlers)
             {
@@ -27,12 +27,12 @@ namespace EmuWarface.Server.Query
             _logger.Info("Initialised {0} query handler(s)", _handlers.Count);
 
             // patch XmppDotNet for parse
-            XmppDotNet.Xml.Factory.RegisterElement<CryOnlineQuery>();
+            // XmppDotNet.Xml.Factory.RegisterElement<CryOnlineQuery>();
         }
 
         public void RegisterHandlers(IContainer container)
         {
-            var handlers = container.Resolve<IEnumerable<IQueryHandler>>();
+            var handlers = container.Resolve<IEnumerable<QueryHandler>>();
 
             foreach (var handler in handlers)
             {
@@ -45,16 +45,20 @@ namespace EmuWarface.Server.Query
             _logger.Info("Initialised {0} query handler(s)", _handlers.Count);
         }
 
-        public void RegisterHandler(string queryName, IQueryHandler handler)
+        public void RegisterHandler(string queryName, QueryHandler handler)
         {
             _handlers.Add(queryName, handler);
         }
 
-        public IQueryHandler? GetHandler(CryOnlineQuery query)
+        public QueryHandler? GetHandler(string queryName)
         {
-            _handlers.TryGetValue(query.Element.Name.LocalName, out IQueryHandler? res);
+            _handlers.TryGetValue(queryName, out QueryHandler? res);
             return res;
-            //return type != null ? _container.Resolve(type) as IQueryHandler : null;
+        }
+
+        public T? GetHandler<T>() where T : QueryHandler
+        {
+            return (T)_handlers.FirstOrDefault(t => t.Value is T).Value;
         }
     }
 }

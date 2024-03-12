@@ -11,6 +11,9 @@ public class ProfileEntity
     public uint BannerBadge { get; set; } = uint.MaxValue;
     public uint BannerMark { get; set; } = uint.MaxValue;
     public uint BannerStripe { get; set; } = uint.MaxValue;
+    public ulong GameMoney { get; set; }
+    public ulong CrownMoney { get; set; }
+    public ulong CryMoney { get; set; }
     public DateTime LastSeen { get; set; } = DateTime.Now;
     public DateTime CreateTime { get; set; } = DateTime.Now;
     public DateTime? RatingBanExpire { get; set; }

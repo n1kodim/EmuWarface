@@ -1,9 +1,9 @@
-﻿using EmuWarface.Server.CryOnline;
-using EmuWarface.Server.CryOnline.Attributes.Query;
-using EmuWarface.Server.CryOnline.Xmpp;
+﻿using EmuWarface.Server.Common;
+using EmuWarface.Server.Common.Attributes;
+using EmuWarface.Server.Game.Data.Cache;
+using EmuWarface.Server.Game.Player;
+using MiniXML;
 using NLog;
-using XmppDotNet.Xmpp.Client;
-using XmppDotNet.Xmpp.MessageArchiving;
 
 namespace EmuWarface.Server.Query.Handlers
 {
@@ -26,35 +26,64 @@ namespace EmuWarface.Server.Query.Handlers
     #endregion
 
     [Query("items")]
-    public class PagedQuery : IQueryHandler
+    public class PagedQuery : QueryHandler
     {
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        public int HandleRequest(XmppSession session, Iq iq, CryOnlineQuery query)
-        {
-            var from = query.Element.GetAttributeInt("from");
-			var to = query.Element.HasAttribute("to") ? query.Element.GetAttributeInt("to") : int.MaxValue;
-			var requestHash = query.Element.GetAttribute("hash");
-			var cachedHash = query.Element.GetAttribute("cached");
+        private CacheStoreManager _cacheSystem;
 
-            if (from < 0 || to <= from)
+        public PagedQuery(CacheStoreManager cacheSystem)
+        {
+            _cacheSystem = cacheSystem;
+        }
+
+        public override async Task<Result<Element?, int>> HandleRequestAsync(IOnlinePlayer player, Element query)
+        {
+            // TODO: test if from="asd"
+            var from = query.GetAttributeValue<int>("from");
+			//var to = query.Element.HasAttribute("to") ? query.Element.GetAttributeInt("to") : int.MaxValue;
+			var requestHash = query.GetAttribute("hash");
+			var cachedHash = query.GetAttribute("cached");
+
+            var data = _cacheSystem.GetCache(query.LocalName);
+            if (data == null)
+            {
+                _logger.Error("Not found cache with name '{0}'", query.LocalName);
+                return -1;
+            }
+
+            Element res = new Element(query.Name)
+                .Attr("code", (int)CacheCode.NotModified)
+                .Attr("from", 0)
+                .Attr("to", 0)
+                .Attr("hash", data.Hash);
+
+            if (cachedHash == data.Hash)
+                return res;
+
+            if (from < 0 /*|| to <= from*/)
                 return -1;
 
+            if(!string.IsNullOrEmpty(requestHash) && requestHash != data.Hash)
+            {
+                res.Attr("code", (int)CacheCode.RequestSequenceInterrupted);
+                return res;
+            }
 
-            return 0;
+            var index = from / 250;
+            var splitted = data.GetSplittedElement(index);
+            if (splitted == null)
+            {
+                _logger.Warn("'{0}': index({1}) of splitted items exceeded the limits.", query.LocalName, index);
+                return -1;
+            }
+
+            res = splitted;
+            res.Name = query.Name;
+
+            return res;
         }
 
-        public int HandleResponse(XmppSession session, Iq iq, CryOnlineQuery query)
-        {
-            throw new NotImplementedException();
-        }
 
-        private enum ResCode
-        {
-            RequestSequenceInterrupted,
-            NotModified,
-            HasMore,
-            Done
-        }
     }
 }

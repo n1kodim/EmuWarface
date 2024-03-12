@@ -1,12 +1,13 @@
 ﻿using EmuWarface.DAL.Models;
 using EmuWarface.DAL.Repositories;
-using EmuWarface.Server.CryOnline;
-using EmuWarface.Server.CryOnline.Attributes.Query;
-using EmuWarface.Server.CryOnline.Xmpp;
-using EmuWarface.Server.Game.Configuration;
+using EmuWarface.Server.Common;
+using EmuWarface.Server.Common.Attributes;
+using EmuWarface.Server.Common.Configuration;
+using EmuWarface.Server.Game.Data;
+using EmuWarface.Server.Game.Player;
+using Microsoft.Extensions.Configuration;
+using MiniXML;
 using NLog;
-using XmppDotNet.Xml;
-using XmppDotNet.Xmpp.Client;
 
 namespace EmuWarface.Server.Query.Handlers
 {
@@ -23,59 +24,56 @@ namespace EmuWarface.Server.Query.Handlers
     #endregion
 
     [Query("get_account_profiles")]
-    public class GetAccountProfilesQuery : IQueryHandler
+    public class GetAccountProfilesQuery : QueryHandler
     {
         private readonly Logger _logger = LogManager.GetCurrentClassLogger();
 
-        private readonly GameResources _resourceManager;
+        private readonly GameOptions _gameOptions;
         private readonly ProfileRepository _profileRepository;
 
-        public GetAccountProfilesQuery(GameResources resourceManager, ProfileRepository profileRepository)
-        { 
-            _resourceManager = resourceManager;
+        public GetAccountProfilesQuery(IConfiguration configuration, GameOptions gameOptions, ProfileRepository profileRepository)
+        {
             _profileRepository = profileRepository;
+            _gameOptions = gameOptions;
         }
 
-        public int HandleRequest(XmppSession session, Iq iq, CryOnlineQuery query)
+        public override async Task<Result<Element?, int>> HandleRequestAsync(IOnlinePlayer player, Element query)
         {
-            string version = query.Element.GetAttribute("version");
+            string version = query.GetAttribute("version");
+            uint user_id = query.GetAttributeValue<uint>("user_id");
 
-            if (version != _resourceManager.GameConfig.GameVersion)
+            if (version != _gameOptions.Version)
             {
-                _logger.Warn("\"{0}\" trying to log in with the wrong version of the game ({1})", session.Jid, version);
-                return 1;
+                _logger.Warn("[{0}] Wrong 'version': {1}", player.Jid, version);
+                return (int)ErrorCode.WrongGameVersion;
+            }
+            if(user_id.ToString() != player.Jid.Local)
+            {
+                _logger.Warn("[{0}] Wrong 'user_id': {1}", player.Jid, user_id);
+                return (int)ErrorCode.WrongUserId;
             }
 
-            uint user_id = (uint)query.Element.GetAttributeInt("user_id");
-            if(user_id.ToString() != session.User)
-            {
-                _logger.Warn("\"{0}\" trying to log in with invalid \"user_id\" ({1})", session.Jid, user_id);
-                return 2;
-            }
+            ProfileEntity? profile = await _profileRepository.GetByUserIdAsync(user_id);
 
-            ProfileEntity? profile = _profileRepository
-                .GetProfileByUserIdAsync(user_id)
-                .GetAwaiter()
-                .GetResult();
-
-            var res = new XmppXElement(query.Element.Name);
+            Element res = new Element(query.Name);
 
             if (profile != null)
             {
-                var profileEl = new XmppXElement(Namespaces.CryOnline, "profile");
-                profileEl.SetAttribute("id", profile.Id);
+                var profileEl = new Element("profile");
+                profileEl.SetAttributeValue("id", profile.Id);
                 profileEl.SetAttribute("nickname", profile.Nickname);
 
-                res.Add(profileEl);
+                res.C(profileEl);
             }
 
-            session.SendQueryResponse(iq, res);
-            return 0;
+            return res;
         }
+    }
 
-        public int HandleResponse(XmppSession session, Iq iq, CryOnlineQuery query)
-        {
-            throw new NotImplementedException();
-        }
+    file enum ErrorCode
+    {
+        None,
+        WrongGameVersion,
+        WrongUserId
     }
 }

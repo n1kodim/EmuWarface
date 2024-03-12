@@ -1,22 +1,21 @@
-﻿using EmuWarface.Server.CryOnline.Xmpp;
-using XmppDotNet;
-using XmppDotNet.Xml;
+﻿using EmuWarface.Common;
+using MiniXML;
 
 namespace EmuWarface.Server.Game.Channel
 {
-    public class MasterServer : IXmppSerializable
+    public class MasterServer
     {
         public int Id { get; private set; }
         public int MinRank { get; private set; }
         public int MaxRank { get; private set; }
         public int MaxUsers { get; private set; }
-        public ChannelType Channel { get; private set; }
+        public ChannelType Type { get; private set; }
         public ChannelRankGroup RankGroup { get; private set; }
         public string Bootstrap { get; private set; }
         public int Online { get; private set; }
-        public double Load
+        public float Load
         {
-            get => (double)Online / MaxUsers;
+            get => (float)Online / MaxUsers;
         }
         public Jid Jid { get; private set; }
         public string Resource
@@ -24,46 +23,36 @@ namespace EmuWarface.Server.Game.Channel
             get => Jid.Resource;
         }
 
-        public MasterServer(int id, ChannelType channel, int maxUsers, int minRank, int maxRank)
+        public MasterServer(int id, ChannelType type, int maxUsers, int minRank, int maxRank)
         {
             Id = id;
             MinRank = minRank;
             MaxRank = maxRank;
             MaxUsers = maxUsers;
-            Channel = channel;
+            Type = type;
             RankGroup = ChannelRankGroup.All; // official server always sends rank_group='all'
             Bootstrap = string.Empty;
 
-            var resource = Channel.GetName().ToLower() + "_" + Id.ToString("000");
+            var resource = Type.GetName().ToLower() + "_" + Id.ToString("000");
             Jid = new Jid(Globals.MasterServerNode, Globals.XmppDomain, resource);
         }
 
-        public XmppXElement Serialize()
+        public Element Serialize()
         {
-            XmppXElement serverEl = new XmppXElement(Namespaces.CryOnline, "server");
-            serverEl.SetAttribute("resource", Resource);
-            serverEl.SetAttribute("server_id", Id);
-            serverEl.SetAttribute("channel", Channel.GetName().ToLower());
-            serverEl.SetAttribute("rank_group", RankGroup.GetName().ToLower());
-            serverEl.SetAttribute("load", Load.ToString("F3").Replace(',', '.'));
-            serverEl.SetAttribute("online", Online);
-            serverEl.SetAttribute("min_rank", MinRank);
-            serverEl.SetAttribute("max_rank", MaxRank);
-            serverEl.SetAttribute("bootstrap", Bootstrap);
-
-            var stats = new XmppXElement(Namespaces.CryOnline, "load_stats");
-            stats.Add(new XmppXElement(Namespaces.CryOnline, "load_stat")
-                .SetAttribute("type", "quick_play")
-                .SetAttribute("value", "255"));
-            stats.Add(new XmppXElement(Namespaces.CryOnline, "load_stat")
-                .SetAttribute("type", "survival")
-                .SetAttribute("value", "255"));
-            stats.Add(new XmppXElement(Namespaces.CryOnline, "load_stat")
-                .SetAttribute("type", "pve")
-                .SetAttribute("value", "255"));
-
-            serverEl.Add(stats);
-            return serverEl;
+            return new Element("server")
+                .Attr("resource", Resource)
+                .Attr("server_id", Id)
+                .Attr("channel", Type.GetName().ToLower())
+                .Attr("rank_group", RankGroup.GetName().ToLower())
+                .Attr("load", (Load, "F3"))
+                .Attr("online", Online)
+                .Attr("min_rank", MinRank)
+                .Attr("max_rank", MaxRank)
+                .Attr("bootstrap", Bootstrap)
+                .C(new Element("load_stats")
+                .C(new Element("load_stat").Attr("type", "quick_play").Attr("value", "255"))
+                .C(new Element("load_stat").Attr("type", "survival").Attr("value", "255"))
+                .C(new Element("load_stat").Attr("type", "pve").Attr("value", "255")));
         }
     }
 }

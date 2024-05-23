@@ -1,0 +1,33 @@
+<abstract-root xmlns:stream="http://etherx.jabber.org/streams">
+
+    <iq xmlns='jabber:client' to='k01.warface' from='1@warface/GameClient' id='uid00000003' type='get'>
+        <query xmlns='urn:cryonline:k01'>
+            <account login='1' password='5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5' />
+        </query>
+    </iq>
+
+    <iq from='k01.warface' to='1@warface/GameClient' id='uid00000003' type='result'>
+        <query xmlns='urn:cryonline:k01'>
+            <account user='1' active_token=' ' nickname='' survival_lb_enabled='0'>
+                <masterservers>
+                    <server resource='pvp_pro_049_r1' server_id='349' channel='pvp_pro' rank_group='all' load='0.830532' online='593' min_rank='26' max_rank='90' bootstrap=''>
+                        <load_stats>
+                            <load_stat type='quick_play' value='255' />
+                            <load_stat type='survival' value='255' />
+                            <load_stat type='pve' value='255' />
+                        </load_stats>
+                    </server>
+                    <server resource='pvp_pro_010_r1' server_id='310' channel='pvp_pro' rank_group='all' load='0.214461' online='245' min_rank='26' max_rank='90' bootstrap=''>
+                        <load_stats>
+                            <load_stat type='quick_play' value='223' />
+                            <load_stat type='survival' value='255' />
+                            <load_stat type='pve' value='255' />
+                        </load_stats>
+                    </server>
+                    ...
+                </masterservers>
+            </account>
+        </query>
+    </iq>
+
+</abstract-root>

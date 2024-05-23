@@ -1,0 +1,17 @@
+<abstract-root xmlns:stream="http://etherx.jabber.org/streams">
+
+    <iq xmlns='jabber:client' to='masterserver@warface/pve_004_r1' from='1@warface/GameClient' id='uid00000007' type='get'>
+        <query xmlns='urn:cryonline:k01'>
+            <get_account_profiles version='1.21200.1957.22400' user_id='1' token=' ' />
+        </query>
+    </iq>
+
+    <iq from='masterserver@warface/pve_004_r1' to='1@warface/GameClient' xml:lang='en' id='uid00000007' type='result'>
+        <query xmlns='urn:cryonline:k01'>
+            <get_account_profiles>
+                <profile id='123' nickname='12345' />
+            </get_account_profiles>
+        </query>
+    </iq>
+
+</abstract-root>

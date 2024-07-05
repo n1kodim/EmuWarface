@@ -9,7 +9,7 @@
     <iq from='masterserver@warface/pve_004_r1' to='1@warface/GameClient' xml:lang='en' id='uid00000007' type='result'>
         <query xmlns='urn:cryonline:k01'>
             <get_account_profiles>
-                <profile id='123' nickname='12345' />
+                <profile id='xxx' nickname='xxx' />
             </get_account_profiles>
         </query>
     </iq>

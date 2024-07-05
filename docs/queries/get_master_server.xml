@@ -1,0 +1,19 @@
+<abstract-root xmlns:stream="http://etherx.jabber.org/streams">
+
+    <iq xmlns='jabber:client' to='k01.warface' from='1@warface/GameClient' id='uid00000007' type='get'>
+        <query xmlns='urn:cryonline:k01'>
+            <get_master_server rank='xxx' channel='pve'/>
+            <!-- OR -->
+            <get_master_server rank='xxx' channel='pve' search_type='pve'/>
+            <!-- OR -->
+            <get_master_server rank='4' channel='pve' used_resources='pve_001;pve_002;...'/>
+        </query>
+    </iq>
+
+    <iq from='k01.warface' to='1@warface/GameClient' xml:lang='en' id='uid00000007' type='result'>
+        <query xmlns='urn:cryonline:k01'>
+            <get_master_server resource='pve_001' load_index='255'/>
+        </query>
+    </iq>
+
+</abstract-root>

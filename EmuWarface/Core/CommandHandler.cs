@@ -1,69 +1,65 @@
-﻿using EmuWarface.Game.Notifications;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace EmuWarface.Core
+namespace EmuWarface.Core;
+
+public static class CommandHandler
 {
-    public static class CommandHandler
+    public static readonly List<ICmd> Handlers = new();
+
+    public static void Init()
     {
-        public static List<ICmd> Handlers = new List<ICmd>();
+        var assembly = Assembly.GetExecutingAssembly();
 
-        public static void Init()
+        foreach (var type in assembly.GetTypes())
         {
-            Assembly assembly = Assembly.GetExecutingAssembly();
-
-            foreach (Type type in assembly.GetTypes())
-            {
-                if(type.GetInterfaces().Contains(typeof(ICmd)))
-                {
-                    var handler = (ICmd)Activator.CreateInstance(type);
-                    Handlers.Add(handler);
-                }
-            }
-
-            Log.Info("[CommandHandler] Loaded {0} commands", Handlers.Count);
-
-            Task.Factory.StartNew(() => ReadConsole(), TaskCreationOptions.LongRunning);
+            if (!type.GetInterfaces().Contains(typeof(ICmd))) continue;
+            var handler = (ICmd)Activator.CreateInstance(type);
+            Handlers.Add(handler);
         }
 
-        public static void ReadConsole()
+        Log.Info("[CommandHandler] Loaded {0} commands", Handlers.Count);
+
+        Task.Factory.StartNew(ReadConsole, TaskCreationOptions.LongRunning);
+    }
+
+    private static void ReadConsole()
+    {
+        while (true)
         {
-            while (true)
+            var input = Console.ReadLine()?.Split(' ').ToList();
+            if (input == null) continue;
+            input.RemoveAll(inputString => inputString is " " or "");
+
+            if (input.Count == 0) continue;
+
+            var cmdName = input[0];
+            var args = input.Skip(1).ToArray();
+
+            var cmd = Handlers.FirstOrDefault(command => command.Names.Contains(cmdName));
+
+            var result = string.Empty;
+            if (cmd == null)
             {
-                var input = Console.ReadLine().Split(' ').ToList();
-                input.RemoveAll(x => x == " " || x == string.Empty);
-
-                if (input.Count == 0) continue;
-
-                string cmdName = input[0];
-                string[] args = input.Skip(1).ToArray();
-
-                var cmd = Handlers.FirstOrDefault(c => c.Names.Contains(cmdName));
-
-                string result = string.Empty;
-                if (cmd == null)
+                result = "Unknown command. Use 'help' for get command list.";
+            }
+            else
+            {
+                try
                 {
-                    result = "Unknown command. Use 'help' for get command list.";
+                    result = cmd.OnCommand(Permission.Admin, args);
                 }
-                else
+                catch (Exception e)
                 {
-                    try
-                    {
-                        result = cmd.OnCommand(Permission.Admin, args);
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e.ToString());
-                    }
+                    Log.Error(e.ToString());
                 }
-
-                if(!string.IsNullOrEmpty(result))
-                    Log.Info(result);
             }
 
+            if (!string.IsNullOrEmpty(result))
+                Log.Info(result);
         }
     }
 }
